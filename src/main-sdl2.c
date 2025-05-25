@@ -21,6 +21,7 @@
 #ifdef USE_SDL2
 
 #include "SDL.h"
+#include "SDL_keyboard.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
@@ -406,6 +407,7 @@ struct button_data {
 		struct font_value font_value;
 		struct term_flag_value term_flag_value;
 		struct alpha_value alpha_value;
+		char command_char_value;
 	} value;
 };
 
@@ -585,6 +587,7 @@ static int g_kp_as_mod = 1;
 
 /* Forward declarations */
 
+static void send_sdl_keylike_event(struct window *window, char commandish_char);
 static void init_globals(void);
 static void free_globals(void);
 static bool read_config_file(void);
@@ -928,7 +931,7 @@ static void render_glyph_mono(const struct window *window,
 	if (codepoint == ' ') {
 		return;
 	}
-
+	// plog_fmt("Drawing %c", codepoint);
 	SDL_Rect dst = {x, y, font->ttf.glyph.w, font->ttf.glyph.h};
 
 	if (IS_CACHED_ASCII_CODEPOINT(codepoint)) {
@@ -2725,7 +2728,7 @@ static bool handle_menu_event(struct window *window, const SDL_Event *event)
 	}
 
 	assert(x >= 0);
-	assert(y >= 0);
+	assert(y >= -2);
 
 	struct menu_panel *menu_panel =
 		get_menu_panel_by_xy(window->status_bar.menu_panel, x, y);
@@ -3256,6 +3259,8 @@ static bool handle_status_bar_buttons(struct window *window,
 		if (!button->disabled) {
 			handled |= button->callbacks.on_event(window, button,
 				event);
+		} else {
+			plog_fmt("button disabled");
 		}
 	}
 
@@ -3493,6 +3498,13 @@ static bool handle_mousebuttondown(const SDL_MouseButtonEvent *mouse)
 	term *old = Term;
 	Term_activate(subwindow->term);
 	Term_mousepress(col, row, button);
+	if (Term->send_char_clicked_as_keystroke)
+	{
+		int theint;
+		wchar_t thechar;
+		Term_what(col, row, &theint, &thechar);
+		send_sdl_keylike_event(window, thechar);
+	}
 	Term_activate(old);
 
 	return true;
@@ -5019,6 +5031,21 @@ static void make_button_bank(struct button_bank *bank)
 	bank->number = 0;
 }
 
+static void send_sdl_keylike_event(struct window *window, char commandish_char)
+{
+	// Synthesize a text-input event and push it into SDL's event queue
+	SDL_TextInputEvent te;
+	te.type = SDL_TEXTINPUT;
+	te.timestamp = SDL_GetTicks();
+	te.windowID = window->id;
+	te.text[0] = commandish_char;
+	te.text[1] = '\0';
+	SDL_Event syntheticEvent;
+	syntheticEvent.type = SDL_TEXTINPUT;
+	syntheticEvent.text = te;
+	SDL_PushEvent(&syntheticEvent);
+}
+
 static bool handle_button_open_subwindow(struct window *window,
 		struct button *button, const SDL_Event *event)
 {
@@ -5088,7 +5115,6 @@ static void make_default_status_buttons(struct status_bar *status_bar)
 	PUSH_BUTTON_LEFT_TO_RIGHT("Menu");
 
 	callbacks.on_render = render_button_subwindows;
-
 	data.type = BUTTON_DATA_UNSIGNED;
 
 	if (status_bar->window->index == MAIN_WINDOW) {
@@ -5355,6 +5381,9 @@ static void start_window(struct window *window)
 				window->full_rect.w, window->full_rect.h,
 				SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
 	} else {
+#ifdef __APPLE__
+		window->config->window_flags = window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI;
+#endif
 		window->window = SDL_CreateWindow(VERSION_NAME,
 				window->full_rect.x, window->full_rect.y,
 				window->full_rect.w, window->full_rect.h,
@@ -5375,6 +5404,24 @@ static void start_window(struct window *window)
 		quit_fmt("cannot create renderer for window %u: %s",
 				window->index, SDL_GetError());
 	}
+
+	{
+		int rw = 0, rh = 0;
+		SDL_GetRendererOutputSize(window->renderer, &rw, &rh);
+		if(rw != window->full_rect.w) {
+			float widthScale = (float)rw / (float) window->full_rect.w;
+			float heightScale = (float)rh / (float) window->full_rect.h;
+
+			if(widthScale != heightScale) {
+				fprintf(stderr, "WARNING: width scale != height scale\n");
+			}
+
+			SDL_RenderSetScale(window->renderer, widthScale, heightScale);
+		}
+	}
+//#ifdef __APPLE__
+//	SDL_RenderSetScale(window->renderer, 2, 2);
+//#endif
 
 	SDL_RendererInfo info;
 	if (SDL_GetRendererInfo(window->renderer, &info) != 0) {
@@ -5793,6 +5840,7 @@ static void load_term(struct subwindow *subwindow)
 	term *old = Term;
 	Term_activate(subwindow->term);
 	Term_redraw();
+	Term->send_char_clicked_as_keystroke = true;
 	Term_activate(old);
 
 	subwindow->linked = true;

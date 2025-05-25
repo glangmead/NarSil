@@ -237,10 +237,11 @@ void init_file_paths(const char *configpath, const char *libpath, const char *da
 	/* Paths generally containing configuration data for Angband. */
 #ifdef GAMEDATA_IN_LIB
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_GAMEDATA, libpath, "gamedata");
+	BUILD_DIRECTORY_PATH(ANGBAND_DIR_CUSTOMIZE, libpath, "customize");
 #else
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_GAMEDATA, configpath, "gamedata");
-#endif
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_CUSTOMIZE, configpath, "customize");
+#endif
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_HELP, libpath, "help");
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_SCREENS, libpath, "screens");
 	BUILD_DIRECTORY_PATH(ANGBAND_DIR_FONTS, libpath, "fonts");
@@ -253,10 +254,15 @@ void init_file_paths(const char *configpath, const char *libpath, const char *da
 	/* Build the path to the user specific directory */
 	if (strncmp(ANGBAND_SYS, "test", 4) == 0)
 		path_build(buf, sizeof(buf), PRIVATE_USER_PATH, "Test");
-	else
-		path_build(buf, sizeof(buf), PRIVATE_USER_PATH, VERSION_NAME);
+    else {
+#ifdef __APPLE__
+        path_build(buf, sizeof(buf), configpath, VERSION_NAME);
+#else
+        path_build(buf, sizeof(buf), PRIVATE_USER_PATH, VERSION_NAME);
+#endif // __APPLE__
+    }
 	ANGBAND_DIR_USER = string_make(buf);
-
+    
 #else /* !PRIVATE_USER_PATH */
 
 #ifdef MACH_O_CARBON

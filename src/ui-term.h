@@ -162,6 +162,7 @@ struct term
 	void *data;
 
 	bool user_flag;
+	bool send_char_clicked_as_keystroke;
 
 	bool data_flag;
 

@@ -49,6 +49,9 @@
  */
 #if !defined(WINDOWS) && !defined(GAMEBOY) && !defined(NDS)
 # define UNIX
+#ifdef __APPLE__
+#define GAMEDATA_IN_LIB 1
+#endif
 
 # ifndef HAVE_DIRENT_H
 #  define HAVE_DIRENT_H
