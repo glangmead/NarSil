@@ -325,7 +325,7 @@ extern int col_map[SIDEBAR_MAX];
 
 #define PW_MAPS (PW_MAP | PW_OVERHEAD)
 
-#define PW_MAX_FLAGS		17
+#define PW_MAX_FLAGS		16
 
 
 /**
