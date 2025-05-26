@@ -603,6 +603,62 @@ void message_flush(game_event_type unused, game_event_data *data, void *user)
 	}
 }
 
+void display_touch_keyboard(game_event_type unused, game_event_data *data, void *user)
+{
+	int i;
+	for (i = 0; i < Term->hgt; i++) {
+		/* Erase the line */
+		Term_erase(0, i, 255);
+	}
+
+	// GCL: lay out an exhaustive set of keys, then repeat the most useful ones at the bottom
+	// I am not a great judge of "useful" yet, though.
+	char row01[13] =  "! @ # $ % ^ &";
+	char row02[13] =  "* ( ) - = [ ]";
+	char row03[13] = "; ' , . / \\ `";
+	char row04[13] = "~ _ + { } : \"";
+	char row05[7]  = "< > ? |";
+	char row06[13] = "a b c d e f g";
+	char row07[13] = "h i j k l m n";
+	char row08[13] = "o p q r s t u";
+	char row09[9]  = "v w x y z";
+	char row10[13] = "A B C D E F G";
+	char row11[13] = "H I J K L M N";
+	char row12[13] = "O P Q R S T U";
+	char row13[9]  = "V W X Y Z";
+	char row14[11] = "e i , w q t";
+	char upper_movement_row_4286[9]  = "7 8 9   \x01";
+	char middl_movement_row_4286[9]  = "4 5 6   \x02";
+	char lower_movement_row_4286[11] = "1 2 3 \x03 \x04 \x05";
+	char upper_movement_row_hjkl[9]  = "y k u   \x01";
+	char middl_movement_row_hjkl[9]  = "h z l   \x02";
+	char lower_movement_row_hjkl[11] = "b j n \x03 \x04 \x05";
+	char *upper_movement_row = upper_movement_row_4286;
+	char *middl_movement_row = middl_movement_row_4286;
+	char *lower_movement_row = lower_movement_row_4286;
+	if (OPT(player, hjkl_movement)) {
+		upper_movement_row = upper_movement_row_hjkl;
+		middl_movement_row = middl_movement_row_hjkl;
+		lower_movement_row = lower_movement_row_hjkl;
+	}
+	Term_putstr(0, 0, 13, COLOUR_WHITE + MULT_BG * BG_DARK, row01);
+	Term_putstr(0, 1, 13, COLOUR_WHITE, row02);
+	Term_putstr(0, 2, 13, COLOUR_WHITE, row03);
+	Term_putstr(0, 3, 13, COLOUR_WHITE, row04);
+	Term_putstr(0, 4, 7,  COLOUR_WHITE, row05);
+	Term_putstr(0, 5, 13, COLOUR_WHITE, row06);
+	Term_putstr(0, 6, 13, COLOUR_WHITE, row07);
+	Term_putstr(0, 7, 13, COLOUR_WHITE, row08);
+	Term_putstr(0, 8, 9,  COLOUR_WHITE, row09);
+	Term_putstr(0, 9, 13, COLOUR_WHITE, row10);
+	Term_putstr(0, 10, 13, COLOUR_WHITE, row11);
+	Term_putstr(0, 11, 13, COLOUR_WHITE, row12);
+	Term_putstr(0, 12, 9,  COLOUR_WHITE, row13);
+	Term_putstr(0, 13, 11, COLOUR_WHITE, row14);
+	Term_putstr(0, 14, 9,  COLOUR_WHITE, upper_movement_row);
+	Term_putstr(0, 15, 9,  COLOUR_WHITE, middl_movement_row);
+	Term_putstr(0, 16, 11,  COLOUR_WHITE, lower_movement_row);
+}
 
 /**
  * Clear the bottom part of the screen

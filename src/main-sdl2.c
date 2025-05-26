@@ -102,13 +102,13 @@
 /* XXX hack: the widest character present in a font
  * for determining font advance (width) */
 #define GLYPH_FOR_ADVANCE 'W'
-#define DEFAULT_VECTOR_FONT_SIZE 12
+#define DEFAULT_VECTOR_FONT_SIZE 15
 
-#define DEFAULT_FONT "10x20x.fon"
+#define DEFAULT_FONT "LiterationMonoNerdFontMono-Regular.ttf"
 #define DEFAULT_FONT_W 10
 #define DEFAULT_FONT_H 20
 
-#define DEFAULT_STATUS_BAR_FONT "8x13x.fon"
+#define DEFAULT_STATUS_BAR_FONT "12x18x.fon"
 
 #define MAX_VECTOR_FONT_SIZE 64
 #define MIN_VECTOR_FONT_SIZE 4
@@ -122,7 +122,7 @@
 #define DEFAULT_IDLE_UPDATE_PERIOD 10
 
 #define DEFAULT_WINDOW_BG_COLOR \
-	COLOUR_L_DARK
+	COLOUR_SLATE
 #define DEFAULT_SUBWINDOW_BG_COLOR \
 	COLOUR_DARK
 #define DEFAULT_SUBWINDOW_CURSOR_COLOR \
@@ -173,7 +173,7 @@
 #define REASONABLE_MAP_TILE_HEIGHT 16
 
 /* angband needs at least 80x24 main term, else severe bugs happen */
-#define MIN_COLS_MAIN 80
+#define MIN_COLS_MAIN 24
 #define MIN_ROWS_MAIN 24
 /* some reasonable values - we dont want the player to resize
  * the term into nothing! */
@@ -5034,15 +5034,58 @@ static void make_button_bank(struct button_bank *bank)
 static void send_sdl_keylike_event(struct window *window, char commandish_char)
 {
 	// Synthesize a text-input event and push it into SDL's event queue
-	SDL_TextInputEvent te;
-	te.type = SDL_TEXTINPUT;
-	te.timestamp = SDL_GetTicks();
-	te.windowID = window->id;
-	te.text[0] = commandish_char;
-	te.text[1] = '\0';
 	SDL_Event syntheticEvent;
-	syntheticEvent.type = SDL_TEXTINPUT;
-	syntheticEvent.text = te;
+
+	if (commandish_char == '\x01' ||
+		commandish_char == '\x02' ||
+		commandish_char == '\x03' ||
+		commandish_char == '\x04' ||
+		commandish_char == '\x05') {
+		SDL_KeyboardEvent ke;
+		SDL_Keycode kc;
+		switch (commandish_char) {
+			case '\x02':
+				kc = SDLK_UP;
+				break;
+			case '\x03':
+				kc = SDLK_LEFT;
+				break;
+			case '\x04':
+				kc = SDLK_DOWN;
+				break;
+			case '\x05':
+				kc = SDLK_RIGHT;
+				break;
+			default:
+				kc = SDLK_ESCAPE;
+		}
+		SDL_Keysym keysym;
+		keysym.mod = 0;
+		keysym.sym = kc;
+		SDL_Scancode scancode;
+		keysym.scancode = SDL_SCANCODE_UNKNOWN;
+		keysym.unused = 0;
+		ke.keysym = keysym;
+		ke.type = SDL_KEYDOWN;
+		ke.timestamp = SDL_GetTicks();
+		ke.windowID = window->id;
+		ke.repeat = 0;
+		ke.state = SDL_PRESSED;
+		ke.padding2 = 0;
+		ke.padding3 = 0;
+		syntheticEvent.type = SDL_KEYDOWN;
+		syntheticEvent.key = ke;
+	} else {
+		SDL_TextInputEvent te;
+		te.type = SDL_TEXTINPUT;
+		te.timestamp = SDL_GetTicks();
+		te.windowID = window->id;
+		te.text[0] = commandish_char;
+		te.text[1] = '\0';
+		syntheticEvent.type = SDL_TEXTINPUT;
+		syntheticEvent.text = te;
+	}
+
 	SDL_PushEvent(&syntheticEvent);
 }
 
@@ -5382,7 +5425,7 @@ static void start_window(struct window *window)
 				SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
 	} else {
 #ifdef __APPLE__
-		window->config->window_flags = window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI;
+		window->config->window_flags = window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL;
 #endif
 		window->window = SDL_CreateWindow(VERSION_NAME,
 				window->full_rect.x, window->full_rect.y,
