@@ -2220,7 +2220,7 @@ static void subwindow_flag_changed(int win_idx, uint32_t flag, bool new_state)
 
 		case PW_TOUCH_KEYBOARD:
 		{
-			register_or_deregister(EVENT_INPUT_FLUSH,
+			register_or_deregister(EVENT_INITSTATUS,
 								   update_touch_keyboard_subwindow,
 								   angband_term[win_idx]);
 			break;

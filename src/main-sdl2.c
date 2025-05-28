@@ -92,7 +92,7 @@
 	ANGBAND_DIR_ICONS
 
 #define DEFAULT_FONT_HINTING \
-	TTF_HINTING_LIGHT
+	TTF_HINTING_LIGHT_SUBPIXEL
 /* border of subwindows, in pixels */
 #define DEFAULT_BORDER 8
 #define DEFAULT_XTRA_BORDER \
@@ -173,7 +173,7 @@
 #define REASONABLE_MAP_TILE_HEIGHT 16
 
 /* angband needs at least 80x24 main term, else severe bugs happen */
-#define MIN_COLS_MAIN 24
+#define MIN_COLS_MAIN 80
 #define MIN_ROWS_MAIN 24
 /* some reasonable values - we dont want the player to resize
  * the term into nothing! */
@@ -186,8 +186,8 @@
 #define MAX_TILE_HEIGHT 9
 
 /* some random numbers */
-#define DEFAULT_WINDOW_MINIMUM_W 198
-#define DEFAULT_WINDOW_MINIMUM_H 66
+#define DEFAULT_WINDOW_MINIMUM_W MIN_COLS_MAIN
+#define DEFAULT_WINDOW_MINIMUM_H MIN_ROWS_MAIN
 
 #define DEFAULT_SNAP_RANGE \
 	DEFAULT_FONT_W
@@ -587,7 +587,7 @@ static int g_kp_as_mod = 1;
 
 /* Forward declarations */
 
-static void send_sdl_keylike_event(struct window *window, char commandish_char);
+static void send_sdl_keylike_event(struct window *window, wchar_t commandish_char);
 static void init_globals(void);
 static void free_globals(void);
 static bool read_config_file(void);
@@ -5031,33 +5031,34 @@ static void make_button_bank(struct button_bank *bank)
 	bank->number = 0;
 }
 
-static void send_sdl_keylike_event(struct window *window, char commandish_char)
+static void send_sdl_keylike_event(struct window *window, wchar_t commandish_char)
 {
 	// Synthesize a text-input event and push it into SDL's event queue
 	SDL_Event syntheticEvent;
-
-	if (commandish_char == '\x01' ||
-		commandish_char == '\x02' ||
-		commandish_char == '\x03' ||
-		commandish_char == '\x04' ||
-		commandish_char == '\x05') {
+	// ␛ ↑ ← ↓ →
+	if (commandish_char == L'⎋' ||
+		commandish_char == L'⮐' ||
+		commandish_char == L'⇥' ||
+		commandish_char == L'↑' ||
+		commandish_char == L'←' ||
+		commandish_char == L'↓' ||
+		commandish_char == L'→') {
 		SDL_KeyboardEvent ke;
 		SDL_Keycode kc;
-		switch (commandish_char) {
-			case '\x02':
-				kc = SDLK_UP;
-				break;
-			case '\x03':
-				kc = SDLK_LEFT;
-				break;
-			case '\x04':
-				kc = SDLK_DOWN;
-				break;
-			case '\x05':
-				kc = SDLK_RIGHT;
-				break;
-			default:
-				kc = SDLK_ESCAPE;
+		if (commandish_char == L'↑') {
+			kc = SDLK_UP;
+		} else if (commandish_char == L'←') {
+			kc = SDLK_LEFT;
+		} else if (commandish_char == L'↓') {
+			kc = SDLK_DOWN;
+		} else if (commandish_char == L'→') {
+			kc = SDLK_RIGHT;
+		} else if (commandish_char == L'⎋') {
+			kc = SDLK_ESCAPE;
+		} else if (commandish_char == L'⮐') {
+			kc = SDLK_RETURN;
+		} else if (commandish_char == L'⇥') {
+			kc = SDLK_TAB;
 		}
 		SDL_Keysym keysym;
 		keysym.mod = 0;
@@ -5425,7 +5426,7 @@ static void start_window(struct window *window)
 				SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
 	} else {
 #ifdef __APPLE__
-		window->config->window_flags = window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL;
+		window->config->window_flags = window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI;
 #endif
 		window->window = SDL_CreateWindow(VERSION_NAME,
 				window->full_rect.x, window->full_rect.y,
@@ -5564,7 +5565,7 @@ static void wipe_window(struct window *window, int display)
 	window->status_bar.font = NULL;
 
 	window->wallpaper.texture = NULL;
-	window->wallpaper.mode = WALLPAPER_TILED;
+	window->wallpaper.mode = WALLPAPER_DONT_SHOW;
 
 	window->stipple.texture = NULL;
 
@@ -6368,6 +6369,10 @@ static void init_globals(void)
 {
 	path_build(g_config_file, sizeof(g_config_file),
 			DEFAULT_CONFIG_FILE_DIR, DEFAULT_CONFIG_FILE);
+	if(!file_exists(g_config_file)) {
+		path_build(g_config_file, sizeof(g_config_file),
+				   ANGBAND_DIR_PLATFORM, DEFAULT_CONFIG_FILE);
+	}
 
 	for (size_t i = 0; i < N_ELEMENTS(g_subwindows); i++) {
 		g_subwindows[i].index = i;
@@ -6503,6 +6508,14 @@ static void load_terms(void)
 static void dump_config_file(void)
 {
 	ang_file *config = file_open(g_config_file, MODE_WRITE, FTYPE_TEXT);
+	if(config == NULL) {
+		// Compare to the two attempts to open the config file in init_globals.
+		// When the DEFAULT_CONFIG_FILE_DIR version is missing on launch, we read the one inside lib/ dir.
+		// Then we enter this block on exit. On future exits we won't enter this block.
+		path_build(g_config_file, sizeof(g_config_file),
+				DEFAULT_CONFIG_FILE_DIR, DEFAULT_CONFIG_FILE);
+		config = file_open(g_config_file, MODE_WRITE, FTYPE_TEXT);
+	}
 
 	assert(config != NULL);
 

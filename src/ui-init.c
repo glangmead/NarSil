@@ -91,7 +91,7 @@ void textui_init(void)
 	/* Initialize window options that will be overridden by any "window.prf" */
 	memset(window_flag, 0, sizeof(uint32_t)*ANGBAND_TERM_MAX);
 	memset(default_window_flag, 0, sizeof default_window_flag);
-	if (ANGBAND_TERM_MAX > 1) default_window_flag[1] = (PW_INVEN);
+	if (ANGBAND_TERM_MAX > 1) default_window_flag[1] = (PW_TOUCH_KEYBOARD);
 	if (ANGBAND_TERM_MAX > 2) default_window_flag[2] = (PW_EQUIP);
 	if (ANGBAND_TERM_MAX > 3) default_window_flag[3] = (PW_COMBAT_ROLLS);
 	if (ANGBAND_TERM_MAX > 4) default_window_flag[4] = (PW_MONSTER);

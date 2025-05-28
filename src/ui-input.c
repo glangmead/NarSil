@@ -48,6 +48,14 @@
 #include "ui-songs.h"
 #include "ui-target.h"
 
+wchar_t TOUCH_KB_GLYPH_ESCAPE = L'␛';
+wchar_t TOUCH_KB_GLYPH_UP     = L'↑';
+wchar_t TOUCH_KB_GLYPH_LEFT   = L'←';
+wchar_t TOUCH_KB_GLYPH_DOWN   = L'↓';
+wchar_t TOUCH_KB_GLYPH_RIGHT  = L'→';
+wchar_t TOUCH_KB_GLYPH_TAB    = L'⇥';
+wchar_t TOUCH_KB_GLYPH_RETURN = L'⮐';
+
 static bool inkey_xtra;
 uint32_t inkey_scan;		/* See the "inkey()" function */
 bool inkey_flag;		/* See the "inkey()" function */
@@ -613,51 +621,51 @@ void display_touch_keyboard(game_event_type unused, game_event_data *data, void 
 
 	// GCL: lay out an exhaustive set of keys, then repeat the most useful ones at the bottom
 	// I am not a great judge of "useful" yet, though.
-	char row01[13] =  "! @ # $ % ^ &";
-	char row02[13] =  "* ( ) - = [ ]";
-	char row03[13] = "; ' , . / \\ `";
-	char row04[13] = "~ _ + { } : \"";
-	char row05[7]  = "< > ? |";
-	char row06[13] = "a b c d e f g";
-	char row07[13] = "h i j k l m n";
-	char row08[13] = "o p q r s t u";
-	char row09[9]  = "v w x y z";
-	char row10[13] = "A B C D E F G";
-	char row11[13] = "H I J K L M N";
-	char row12[13] = "O P Q R S T U";
-	char row13[9]  = "V W X Y Z";
-	char row14[11] = "e i , w q t";
-	char upper_movement_row_4286[9]  = "7 8 9   \x01";
-	char middl_movement_row_4286[9]  = "4 5 6   \x02";
-	char lower_movement_row_4286[11] = "1 2 3 \x03 \x04 \x05";
-	char upper_movement_row_hjkl[9]  = "y k u   \x01";
-	char middl_movement_row_hjkl[9]  = "h z l   \x02";
-	char lower_movement_row_hjkl[11] = "b j n \x03 \x04 \x05";
-	char *upper_movement_row = upper_movement_row_4286;
-	char *middl_movement_row = middl_movement_row_4286;
-	char *lower_movement_row = lower_movement_row_4286;
+	const wchar_t *row01 = L"! @ # $ % ^ &";
+	const wchar_t *row02 = L"* ( ) - = [ ]";
+	const wchar_t *row03 = L"; ' , . / \\ `";
+	const wchar_t *row04 = L"~ _ + { } : \"";
+	const wchar_t *row05  = L"< > ? |";
+	const wchar_t *row06 = L"a b c d e f g";
+	const wchar_t *row07 = L"h i j k l m n";
+	const wchar_t *row08 = L"o p q r s t u";
+	const wchar_t *row09  = L"v w x y z";
+	const wchar_t *row10 = L"A B C D E F G";
+	const wchar_t *row11 = L"H I J K L M N";
+	const wchar_t *row12 = L"O P Q R S T U";
+	const wchar_t *row13  = L"V W X Y Z";
+	const wchar_t *row14 = L"e i , w q t";
+	const wchar_t *upper_movement_row_4286 = L"7 8 9   ⎋    ⮐";
+	const wchar_t *middl_movement_row_4286 = L"4 5 6   ↑    ⇥";
+	const wchar_t *lower_movement_row_4286 = L"1 2 3 ← ↓ →";
+	const wchar_t *upper_movement_row_hjkl = L"y k u   ⎋    ⮐";
+	const wchar_t *middl_movement_row_hjkl = L"h z l   ↑    ⇥";
+	const wchar_t *lower_movement_row_hjkl = L"b j n ← ↓ →";
+	const wchar_t *upper_movement_row = upper_movement_row_4286;
+	const wchar_t *middl_movement_row = middl_movement_row_4286;
+	const wchar_t *lower_movement_row = lower_movement_row_4286;
 	if (OPT(player, hjkl_movement)) {
 		upper_movement_row = upper_movement_row_hjkl;
 		middl_movement_row = middl_movement_row_hjkl;
 		lower_movement_row = lower_movement_row_hjkl;
 	}
-	Term_putstr(0, 0, 13, COLOUR_WHITE + MULT_BG * BG_DARK, row01);
-	Term_putstr(0, 1, 13, COLOUR_WHITE, row02);
-	Term_putstr(0, 2, 13, COLOUR_WHITE, row03);
-	Term_putstr(0, 3, 13, COLOUR_WHITE, row04);
-	Term_putstr(0, 4, 7,  COLOUR_WHITE, row05);
-	Term_putstr(0, 5, 13, COLOUR_WHITE, row06);
-	Term_putstr(0, 6, 13, COLOUR_WHITE, row07);
-	Term_putstr(0, 7, 13, COLOUR_WHITE, row08);
-	Term_putstr(0, 8, 9,  COLOUR_WHITE, row09);
-	Term_putstr(0, 9, 13, COLOUR_WHITE, row10);
-	Term_putstr(0, 10, 13, COLOUR_WHITE, row11);
-	Term_putstr(0, 11, 13, COLOUR_WHITE, row12);
-	Term_putstr(0, 12, 9,  COLOUR_WHITE, row13);
-	Term_putstr(0, 13, 11, COLOUR_WHITE, row14);
-	Term_putstr(0, 14, 9,  COLOUR_WHITE, upper_movement_row);
-	Term_putstr(0, 15, 9,  COLOUR_WHITE, middl_movement_row);
-	Term_putstr(0, 16, 11,  COLOUR_WHITE, lower_movement_row);
+	Term_queue_chars(0, 0, 13, COLOUR_L_WHITE, row01);
+	Term_queue_chars(0, 1, 13, COLOUR_L_WHITE, row02);
+	Term_queue_chars(0, 2, 13, COLOUR_L_WHITE, row03);
+	Term_queue_chars(0, 3, 13, COLOUR_L_WHITE, row04);
+	Term_queue_chars(0, 4, 7,  COLOUR_L_WHITE, row05);
+	Term_queue_chars(0, 5, 13, COLOUR_L_WHITE, row06);
+	Term_queue_chars(0, 6, 13, COLOUR_L_WHITE, row07);
+	Term_queue_chars(0, 7, 13, COLOUR_L_WHITE, row08);
+	Term_queue_chars(0, 8, 9,  COLOUR_L_WHITE, row09);
+	Term_queue_chars(0, 9, 13, COLOUR_L_WHITE, row10);
+	Term_queue_chars(0, 10, 13, COLOUR_L_WHITE, row11);
+	Term_queue_chars(0, 11, 13, COLOUR_L_WHITE, row12);
+	Term_queue_chars(0, 12, 9,  COLOUR_L_WHITE, row13);
+	Term_queue_chars(0, 13, 11, COLOUR_YELLOW, row14);
+	Term_queue_chars(0, 14, 14,  COLOUR_YELLOW, upper_movement_row);
+	Term_queue_chars(0, 15, 14,  COLOUR_YELLOW, middl_movement_row);
+	Term_queue_chars(0, 16, 11,  COLOUR_YELLOW, lower_movement_row);
 }
 
 /**

@@ -323,6 +323,9 @@ int main(int argc, char *argv[])
 {
 	int i;
 	bool new_game = false, select_game = false;
+#ifdef __APPLE__
+	select_game = true;
+#endif
 	bool done = false;
 
 	const char *mstr = NULL;
