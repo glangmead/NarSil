@@ -407,7 +407,6 @@ struct button_data {
 		struct font_value font_value;
 		struct term_flag_value term_flag_value;
 		struct alpha_value alpha_value;
-		char command_char_value;
 	} value;
 };
 
@@ -3079,7 +3078,12 @@ static void handle_last_resize_event(int num_events, const SDL_Event *events)
 
 			struct window *window = get_window_by_id(event.windowID);
 			assert(window != NULL);
-			resize_window(window, event.data1, event.data2);
+			if (window->config->window_flags | SDL_WINDOW_ALLOW_HIGHDPI) {
+				resize_window(window, event.data1*2, event.data2*2);
+			} else {
+				resize_window(window, event.data1, event.data2);
+			}
+
 
 			return;
 		}
@@ -5452,6 +5456,7 @@ static void start_window(struct window *window)
 	{
 		int rw = 0, rh = 0;
 		SDL_GetRendererOutputSize(window->renderer, &rw, &rh);
+		SDL_RenderSetLogicalSize(window->renderer, rw, rh);
 		if(rw != window->full_rect.w) {
 			float widthScale = (float)rw / (float) window->full_rect.w;
 			float heightScale = (float)rh / (float) window->full_rect.h;
@@ -5460,7 +5465,7 @@ static void start_window(struct window *window)
 				fprintf(stderr, "WARNING: width scale != height scale\n");
 			}
 
-			SDL_RenderSetScale(window->renderer, widthScale, heightScale);
+			//SDL_RenderSetScale(window->renderer, widthScale, heightScale);
 		}
 	}
 //#ifdef __APPLE__
