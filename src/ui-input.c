@@ -617,12 +617,21 @@ void display_touch_keyboard(game_event_type unused, game_event_data *data, void 
 	char path[512];
 	int term_width, term_height;
 	Term_get_size(&term_width, &term_height);
+	char *filename_vert =  "keyboard_vert.txt";
+	char *filename_horiz = "keyboard_horiz.txt";
+	char *filename = filename_horiz;
 	if (term_height * 2 > term_width) {
-		path_build(path, sizeof(path), ANGBAND_DIR_HELP, "keyboard_vert.txt");
-	} else {
-		path_build(path, sizeof(path), ANGBAND_DIR_HELP, "keyboard_horiz.txt");
+		filename = filename_vert;
 	}
+	path_build(path, sizeof(path), ANGBAND_DIR_USER, filename);
 	ang_file *key_file = file_open(path, MODE_READ, FTYPE_TEXT);
+	if (!key_file) {
+		path_build(path, sizeof(path), ANGBAND_DIR_HELP, filename);
+		key_file = file_open(path, MODE_READ, FTYPE_TEXT);
+	}
+	if (!key_file)
+		return; // TODO: need to report errors
+
 	int term_line = 0;
 	int wstrlen = 0;
 	while (file_getl(key_file, keyboard_text, sizeof(keyboard_text))) {
