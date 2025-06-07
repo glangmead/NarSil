@@ -611,61 +611,26 @@ void message_flush(game_event_type unused, game_event_data *data, void *user)
 	}
 }
 
-void display_touch_keyboard(game_event_type unused, game_event_data *data, void *user)
-{
-	int i;
-	for (i = 0; i < Term->hgt; i++) {
-		/* Erase the line */
-		Term_erase(0, i, 255);
+void display_touch_keyboard(game_event_type unused, game_event_data *data, void *user) {
+	char keyboard_text[80];
+	wchar_t w_keyboard_text[80];
+	char path[512];
+	int term_width, term_height;
+	Term_get_size(&term_width, &term_height);
+	if (term_height * 2 > term_width) {
+		path_build(path, sizeof(path), ANGBAND_DIR_HELP, "keyboard_vert.txt");
+	} else {
+		path_build(path, sizeof(path), ANGBAND_DIR_HELP, "keyboard_horiz.txt");
 	}
-
-	// GCL: lay out an exhaustive set of keys, then repeat the most useful ones at the bottom
-	// I am not a great judge of "useful" yet, though.
-	const wchar_t *row01 = L"! @ # $ % ^ &";
-	const wchar_t *row02 = L"* ( ) - = [ ]";
-	const wchar_t *row03 = L"; ' , . / \\ `";
-	const wchar_t *row04 = L"~ _ + { } : \"";
-	const wchar_t *row05  = L"< > ? |";
-	const wchar_t *row06 = L"a b c d e f g";
-	const wchar_t *row07 = L"h i j k l m n";
-	const wchar_t *row08 = L"o p q r s t u";
-	const wchar_t *row09  = L"v w x y z";
-	const wchar_t *row10 = L"A B C D E F G";
-	const wchar_t *row11 = L"H I J K L M N";
-	const wchar_t *row12 = L"O P Q R S T U";
-	const wchar_t *row13  = L"V W X Y Z";
-	const wchar_t *row14 = L"e i , w q t";
-	const wchar_t *upper_movement_row_4286 = L"7 8 9   ⎋    ⮐";
-	const wchar_t *middl_movement_row_4286 = L"4 5 6   ↑    ⇥";
-	const wchar_t *lower_movement_row_4286 = L"1 2 3 ← ↓ →";
-	const wchar_t *upper_movement_row_hjkl = L"y k u   ⎋    ⮐";
-	const wchar_t *middl_movement_row_hjkl = L"h z l   ↑    ⇥";
-	const wchar_t *lower_movement_row_hjkl = L"b j n ← ↓ →";
-	const wchar_t *upper_movement_row = upper_movement_row_4286;
-	const wchar_t *middl_movement_row = middl_movement_row_4286;
-	const wchar_t *lower_movement_row = lower_movement_row_4286;
-	if (OPT(player, hjkl_movement)) {
-		upper_movement_row = upper_movement_row_hjkl;
-		middl_movement_row = middl_movement_row_hjkl;
-		lower_movement_row = lower_movement_row_hjkl;
+	ang_file *key_file = file_open(path, MODE_READ, FTYPE_TEXT);
+	int term_line = 0;
+	int wstrlen = 0;
+	while (file_getl(key_file, keyboard_text, sizeof(keyboard_text))) {
+		strunescape(keyboard_text);
+		wstrlen = text_mbstowcs(w_keyboard_text, keyboard_text, strlen(keyboard_text));
+		Term_queue_chars(0, term_line, wstrlen, COLOUR_L_WHITE, w_keyboard_text);
+		term_line++;
 	}
-	Term_queue_chars(0, 0, 13, COLOUR_L_WHITE, row01);
-	Term_queue_chars(0, 1, 13, COLOUR_L_WHITE, row02);
-	Term_queue_chars(0, 2, 13, COLOUR_L_WHITE, row03);
-	Term_queue_chars(0, 3, 13, COLOUR_L_WHITE, row04);
-	Term_queue_chars(0, 4, 7,  COLOUR_L_WHITE, row05);
-	Term_queue_chars(0, 5, 13, COLOUR_L_WHITE, row06);
-	Term_queue_chars(0, 6, 13, COLOUR_L_WHITE, row07);
-	Term_queue_chars(0, 7, 13, COLOUR_L_WHITE, row08);
-	Term_queue_chars(0, 8, 9,  COLOUR_L_WHITE, row09);
-	Term_queue_chars(0, 9, 13, COLOUR_L_WHITE, row10);
-	Term_queue_chars(0, 10, 13, COLOUR_L_WHITE, row11);
-	Term_queue_chars(0, 11, 13, COLOUR_L_WHITE, row12);
-	Term_queue_chars(0, 12, 9,  COLOUR_L_WHITE, row13);
-	Term_queue_chars(0, 13, 11, COLOUR_YELLOW, row14);
-	Term_queue_chars(0, 14, 14,  COLOUR_YELLOW, upper_movement_row);
-	Term_queue_chars(0, 15, 14,  COLOUR_YELLOW, middl_movement_row);
-	Term_queue_chars(0, 16, 11,  COLOUR_YELLOW, lower_movement_row);
 }
 
 /**
