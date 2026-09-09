@@ -318,6 +318,9 @@ ADD_EXECUTABLE(OurExecutable
         $<$<BOOL:${SUPPORT_GCU_FRONTEND}>:src/main-gcu.c>
         $<$<BOOL:${SUPPORT_SDL_FRONTEND}>:src/main-sdl.c>
         $<$<BOOL:${SUPPORT_SDL2_FRONTEND}>:src/main-sdl2.c>
+        $<$<BOOL:${SUPPORT_SDL2_FRONTEND}>:src/sdl2/pui-ctrl.c>
+        $<$<BOOL:${SUPPORT_SDL2_FRONTEND}>:src/sdl2/pui-dlg.c>
+        $<$<BOOL:${SUPPORT_SDL2_FRONTEND}>:src/sdl2/pui-misc.c>
         $<$<BOOL:${SUPPORT_WINDOWS_FRONTEND}>:${OUR_WINDOWS_RC}>
         $<$<BOOL:${SUPPORT_WINDOWS_FRONTEND}>:src/main-win.c>
         $<$<BOOL:${SUPPORT_WINDOWS_FRONTEND}>:src/win/readdib.c>
@@ -334,7 +337,6 @@ ADD_EXECUTABLE(OurExecutable
 )
 
 if(IOS)
-    set(DEPLOYMENT_TARGET "18.5" CACHE STRING "")
     set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "")
     add_compile_definitions(USE_SDL2 GAMEDATA_IN_LIB)
     set(RESOURCES
