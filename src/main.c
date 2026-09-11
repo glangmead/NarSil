@@ -57,6 +57,7 @@
  */
 #ifdef USE_SDL2
 #include "SDL_main.h"
+#include "SDL_filesystem.h"
 #endif
 
 /**
@@ -131,15 +132,23 @@ static void quit_hook(const char *s)
  */
 static void init_stuff(void)
 {
-	char configpath[512];
-	char libpath[512];
-	char datapath[512];
+    char configpath[512];
+    char datapath[512];
+    char libpath[512];
+#ifdef ON_IOS
+	my_strcpy(configpath, getenv("HOME"), sizeof(configpath));
+	my_strcpy(datapath, getenv("HOME"), sizeof(datapath));
+	my_strcat(datapath, "/Documents", sizeof(datapath));
+	my_strcat(configpath, "/Documents", sizeof(configpath));
+	my_strcpy(libpath, SDL_GetBasePath(), sizeof(libpath));
+	my_strcat(libpath, "/lib", sizeof(libpath));
+#else
 
 	/* Use the angband_path, or a default */
 	my_strcpy(configpath, DEFAULT_CONFIG_PATH, sizeof(configpath));
 	my_strcpy(libpath, DEFAULT_LIB_PATH, sizeof(libpath));
 	my_strcpy(datapath, DEFAULT_DATA_PATH, sizeof(datapath));
-
+#endif /* ON_IOS */
 	/* Make sure they're terminated */
 	configpath[511] = '\0';
 	libpath[511] = '\0';
@@ -316,6 +325,10 @@ int main(int argc, char *argv[])
 {
 	int i;
 	bool new_game = false, select_game = false;
+#ifdef ON_IOS
+	/* There is no command line to name a savefile with, so always ask. */
+	select_game = true;
+#endif
 	bool done = false;
 
 	const char *mstr = NULL;
@@ -477,7 +490,7 @@ int main(int argc, char *argv[])
 	if (mstr)
 		ANGBAND_SYS = mstr;
 #if !defined(WINDOWS)
-	if (setlocale(LC_CTYPE, "")) {
+	if (setlocale(LC_CTYPE, "UTF-8")) {
 		/* Require UTF-8 */
 		if (!streq(nl_langinfo(CODESET), "UTF-8"))
 			quit_fmt("%s requires UTF-8 support", VERSION_NAME);
