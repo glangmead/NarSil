@@ -162,7 +162,6 @@ struct term
 	void *data;
 
 	bool user_flag;
-	bool send_char_clicked_as_keystroke;
 
 	bool data_flag;
 
@@ -321,7 +320,6 @@ extern int col_map[SIDEBAR_MAX];
 #define PW_ITEMLIST         0x00001000L /* Display item list */
 #define PW_PLAYER_3         0x00002000L /* Display player (topbar) */
 #define PW_COMBAT_ROLLS     0x00004000L /* Display combat rolls */
-#define PW_TOUCH_KEYBOARD   0x00008000L /* Display touch keyboard */
 
 #define PW_MAPS (PW_MAP | PW_OVERHEAD)
 

@@ -611,45 +611,6 @@ void message_flush(game_event_type unused, game_event_data *data, void *user)
 	}
 }
 
-void display_touch_keyboard(game_event_type unused, game_event_data *data, void *user) {
-	char keyboard_text[80];
-	wchar_t w_keyboard_text[80];
-	char path[512];
-	int term_width, term_height;
-	Term_get_size(&term_width, &term_height);
-	char *filename_vert =  "keyboard_vert.txt";
-	char *filename_horiz = "keyboard_horiz.txt";
-	char *filename = filename_horiz;
-	if (term_height * 2 > term_width) {
-		filename = filename_vert;
-	}
-	path_build(path, sizeof(path), ANGBAND_DIR_USER, filename);
-	ang_file *key_file = file_open(path, MODE_READ, FTYPE_TEXT);
-	if (!key_file) {
-		path_build(path, sizeof(path), ANGBAND_DIR_HELP, filename);
-		key_file = file_open(path, MODE_READ, FTYPE_TEXT);
-	}
-	if (!key_file)
-		return; // TODO: need to report errors
-
-	int term_line = 0;
-	int wstrlen = 0;
-	/* Clip to the term: Term_queue_chars() does not check its bounds */
-	while (term_line < term_height
-			&& file_getl(key_file, keyboard_text, sizeof(keyboard_text))) {
-		strunescape(keyboard_text);
-		wstrlen = text_mbstowcs(w_keyboard_text, keyboard_text, strlen(keyboard_text));
-		if (wstrlen > term_width) {
-			wstrlen = term_width;
-		}
-		if (wstrlen > 0) {
-			Term_queue_chars(0, term_line, wstrlen, COLOUR_L_WHITE, w_keyboard_text);
-		}
-		term_line++;
-	}
-	file_close(key_file);
-}
-
 /**
  * Clear the bottom part of the screen
  */
@@ -1799,6 +1760,43 @@ static int textui_get_count(void)
  * Hack -- special buffer to hold the action of the current keymap
  */
 static struct keypress request_command_buffer[256];
+
+/**
+ * Install an action as the action of the current keymap, as if a keymap
+ * had matched, and return the first keypress of it.
+ *
+ * This is how a front end sends more than one keypress at a time: the SDL2
+ * touch panel's slots use it, and what they hold is what a pref file's
+ * "keymap-act:" line holds, a keypress array from keypress_from_text().
+ * Going through a keymap keeps the more-prompt handling ('(' and ')') and
+ * the "already inside a keymap" behaviour that pushing the keys one at a
+ * time would lose.
+ *
+ * Only the keypresses after the first are left for inkey_next, because
+ * inkey_ex() reads inkey_next when it is entered and a front end calling
+ * this is already inside it; the caller must deliver the returned keypress
+ * itself, with Term_keypress().  Returns KEYPRESS_NULL for an empty
+ * action.
+ */
+struct keypress feed_keymap(const struct keypress *act)
+{
+	size_t n = 0;
+
+	inkey_next = NULL;
+
+	while (act[n].type != EVT_NONE
+			&& n < N_ELEMENTS(request_command_buffer) - 1) {
+		request_command_buffer[n] = act[n];
+		n++;
+	}
+	request_command_buffer[n] = KEYPRESS_NULL;
+
+	if (n > 1) {
+		inkey_next = request_command_buffer + 1;
+	}
+
+	return (n > 0) ? request_command_buffer[0] : KEYPRESS_NULL;
+}
 
 
 /**

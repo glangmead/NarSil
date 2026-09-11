@@ -1,0 +1,65 @@
+# The touch panel's slot tabs.  Edit it freely; the Menu's "Reset Panel
+# Slots" brings this file back.
+#
+# tab:Name  starts one of the tabs Act, Items, Info and Mine.
+# row:...   fills that tab's next row of cells, top row first; a tab
+#           holds 4 rows of 7.
+#
+# A cell is one of
+#   [Description]  a command, named as the command menu names
+#                  it; its key is looked up for whichever
+#                  keyset is in force when it is pressed.
+#   "action"       a keymap's action, written exactly as a
+#                  pref file's keymap-act: line writes one:
+#                  "za." is three keypresses, "[Escape]" is
+#                  the escape key, "{^}f" is control-F.
+#   -              nothing.
+# Any of them may end in =Face to change the word shown on it.
+#
+# Order.  The grid sits by the right thumb, with Escape and Enter in
+# the bottom corner, so the bottom row is the easiest to reach and
+# its right end the easiest of all; the top row is the hardest.  Each
+# tab below puts its most used commands there, following the Android
+# port's ribbon order (its "most used commands", by its author)
+# adjusted for what the compass rose already covers: walking, staying
+# (its centre), running (Shift) and altering (Ctrl).  The top row is
+# left empty on every tab; it is where the fast keys will appear when
+# a prompt is asking for something.
+#
+# NarSil's own commands take the places Angband gives magic.  Stealth
+# mode is toggled every few turns, so it sits on Act's bottom row
+# where Angband casts spells; songs change less often and sit a row
+# up.  Smithing, the horn and the two quivers take the wand, rod and
+# scroll slots on Items.
+#
+# Mine is yours: macros, as keymap actions.  It starts with the three
+# answers to the rest prompt, so that each is one tap: '&' rests as
+# needed, '*' until HP and SP are full, '!' until either is.  Rest is
+# 'Z' in NarSil's own keyset, which is the one these assume; under
+# the Angband keyset it is 'R' and these three want editing.
+
+panel-version:1
+
+tab:Act
+row:-
+row:[Change song]  [Stand still]  [Walk into a trap]  [Go down staircase]  [Go up staircase]  [Exchange places]  [Target closest monster]
+row:[Target monster or location]  [Close a door]  [Open a door or a chest]  [Disarm a trap or chest]  [Dig a tunnel]  [Bash a door]  [Alter a grid]
+row:[Start running]  [Throw an item]  [Repeat previous command]  [Look around]  [Fire at nearest target]  [Toggle stealth mode]  [Rest for a while]
+
+tab:Items
+row:-
+row:[Uninscribe an object]  [Inscribe an object]  [Ignore an item]  [Destroy an item]  [Examine an item]  [Take off/unwield an item]  [Fuel your light source]
+row:[Smith an item]  [Use a staff]  [Blow a horn]  [Fire from quiver 2]  [Eat some food]  [Wear/wield an item]  [Display equipment listing]
+row:[Drop an item]  [Pick up objects]  [Fire from quiver 1]  [Throw automatically]  [Quaff a potion]  [Use an item]  [Display inventory listing]
+
+tab:Info
+row:-
+row:-  -  [Save "screen dump"]  [Redraw the screen]  [Retire character and quit]  [Save and quit]  [Save and don't quit]
+row:[Toggle ignoring of items]  [Abilities list]  [Identify symbol]  [Take notes]  [Show previous message]  [Show previous messages]  [Help]
+row:[Interact with options]  [Display visible item list]  [Display visible monster list]  [Locate player on map]  [Full dungeon map]  [Check knowledge]  [Character description]
+
+tab:Mine
+row:-
+row:-
+row:-
+row:"Z&[Enter]"=Rest&  "Z*[Enter]"=Rest*  "Z![Enter]"=Rest!

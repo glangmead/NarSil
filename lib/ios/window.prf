@@ -4,8 +4,8 @@
 
 # Options
 
-# Window 'Term-1', Flag 'Display touch keyboard'
-window:1:15:1
+# Window 'Term-1', Flag 'Display inven/equip'
+window:1:0:1
 
 # Window 'Term-2', Flag 'Display monster list'
 window:2:10:1
