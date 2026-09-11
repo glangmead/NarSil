@@ -48,6 +48,14 @@
 #include "ui-songs.h"
 #include "ui-target.h"
 
+wchar_t TOUCH_KB_GLYPH_ESCAPE = L'␛';
+wchar_t TOUCH_KB_GLYPH_UP     = L'↑';
+wchar_t TOUCH_KB_GLYPH_LEFT   = L'←';
+wchar_t TOUCH_KB_GLYPH_DOWN   = L'↓';
+wchar_t TOUCH_KB_GLYPH_RIGHT  = L'→';
+wchar_t TOUCH_KB_GLYPH_TAB    = L'⇥';
+wchar_t TOUCH_KB_GLYPH_RETURN = L'⮐';
+
 static bool inkey_xtra;
 uint32_t inkey_scan;		/* See the "inkey()" function */
 bool inkey_flag;		/* See the "inkey()" function */
@@ -602,7 +610,6 @@ void message_flush(game_event_type unused, game_event_data *data, void *user)
 		message_column = 0;
 	}
 }
-
 
 /**
  * Clear the bottom part of the screen
@@ -1762,6 +1769,43 @@ static int textui_get_count(void)
  * Hack -- special buffer to hold the action of the current keymap
  */
 static struct keypress request_command_buffer[256];
+
+/**
+ * Install an action as the action of the current keymap, as if a keymap
+ * had matched, and return the first keypress of it.
+ *
+ * This is how a front end sends more than one keypress at a time: the SDL2
+ * touch panel's slots use it, and what they hold is what a pref file's
+ * "keymap-act:" line holds, a keypress array from keypress_from_text().
+ * Going through a keymap keeps the more-prompt handling ('(' and ')') and
+ * the "already inside a keymap" behaviour that pushing the keys one at a
+ * time would lose.
+ *
+ * Only the keypresses after the first are left for inkey_next, because
+ * inkey_ex() reads inkey_next when it is entered and a front end calling
+ * this is already inside it; the caller must deliver the returned keypress
+ * itself, with Term_keypress().  Returns KEYPRESS_NULL for an empty
+ * action.
+ */
+struct keypress feed_keymap(const struct keypress *act)
+{
+	size_t n = 0;
+
+	inkey_next = NULL;
+
+	while (act[n].type != EVT_NONE
+			&& n < N_ELEMENTS(request_command_buffer) - 1) {
+		request_command_buffer[n] = act[n];
+		n++;
+	}
+	request_command_buffer[n] = KEYPRESS_NULL;
+
+	if (n > 1) {
+		inkey_next = request_command_buffer + 1;
+	}
+
+	return (n > 0) ? request_command_buffer[0] : KEYPRESS_NULL;
+}
 
 
 /**
